@@ -16,7 +16,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import de.bamero.tempoZohoMiddleware.dataService.JiraProjectService;
-import de.bamero.tempoZohoMiddleware.entities.IJiraTask;
 import de.bamero.tempoZohoMiddleware.entities.JiraBaseTask;
 import de.bamero.tempoZohoMiddleware.entities.JiraProject;
 import de.bamero.tempoZohoMiddleware.parsers.TempoParser;

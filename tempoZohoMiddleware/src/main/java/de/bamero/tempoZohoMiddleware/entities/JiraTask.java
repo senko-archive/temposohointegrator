@@ -15,6 +15,9 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Transient;
 
+import org.hibernate.FetchMode;
+import org.hibernate.annotations.Fetch;
+
 import lombok.Data;
 
 @Data
@@ -25,7 +28,7 @@ public class JiraTask extends JiraBaseTask {
 	@GeneratedValue(strategy=GenerationType.AUTO)
 	private Long _jiraTaskId;
 	*/
-	@Id
+
 	private String id;
 	private String self;
 	private String key;
@@ -39,7 +42,8 @@ public class JiraTask extends JiraBaseTask {
 	@JoinColumn
 	private JiraUser assignee;
 	
-	@OneToMany(mappedBy="jiraTask", cascade=CascadeType.PERSIST, fetch = FetchType.EAGER)
+	@OneToMany(mappedBy="jiraTask", cascade=CascadeType.PERSIST, fetch=FetchType.EAGER)
+	@Fetch(value=org.hibernate.annotations.FetchMode.SUBSELECT)
 	@ElementCollection(targetClass=JiraSubTask.class)
 	private List<JiraSubTask> subTasks = new ArrayList<JiraSubTask>();
 	

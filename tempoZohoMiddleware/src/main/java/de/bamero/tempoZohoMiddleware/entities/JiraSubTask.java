@@ -23,7 +23,7 @@ public class JiraSubTask extends JiraBaseTask {
 	@GeneratedValue(strategy=GenerationType.AUTO)
 	private Long _jiraSubTaskId;
 	*/
-	@Id
+	
 	private String id;
 	private String key;
 	private String self;

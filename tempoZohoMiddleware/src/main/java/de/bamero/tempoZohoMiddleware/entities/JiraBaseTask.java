@@ -13,6 +13,8 @@ import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.OneToMany;
 
+import org.hibernate.annotations.Fetch;
+
 import lombok.Data;
 
 @Data
@@ -27,6 +29,7 @@ public class JiraBaseTask {
 	
 	// worklogs will be there
 	@OneToMany(mappedBy="jiraTaskOrSubTask", cascade=CascadeType.PERSIST, fetch = FetchType.EAGER)
+	@Fetch(value=org.hibernate.annotations.FetchMode.SUBSELECT)
 	private List<JiraWorkLog> workLogs;
 	
 	

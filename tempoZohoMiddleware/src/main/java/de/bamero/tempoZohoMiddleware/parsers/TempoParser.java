@@ -16,7 +16,6 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import de.bamero.tempoZohoMiddleware.entities.IJiraTask;
 import de.bamero.tempoZohoMiddleware.entities.JiraBaseTask;
 import de.bamero.tempoZohoMiddleware.entities.JiraSubTask;
 import de.bamero.tempoZohoMiddleware.entities.JiraTask;

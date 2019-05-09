@@ -17,6 +17,7 @@ import org.springframework.web.client.RestTemplate;
 
 import de.bamero.tempoZohoMiddleware.dataService.JiraProjectService;
 import de.bamero.tempoZohoMiddleware.entities.IJiraTask;
+import de.bamero.tempoZohoMiddleware.entities.JiraBaseTask;
 import de.bamero.tempoZohoMiddleware.entities.JiraProject;
 import de.bamero.tempoZohoMiddleware.parsers.TempoParser;
 import de.bamero.tempoZohoMiddleware.utils.ConsumerHelper;
@@ -79,7 +80,7 @@ public class TempoConsumer {
 		
 		
 		// get all jira task and jira subtask id's with type Map<JiraTask/JiraSubTask Id, type(task or subtask)
-		Map<String, IJiraTask> allJiraTaskandSubTaskIds = new HashMap<>();
+		Map<String, JiraBaseTask> allJiraTaskandSubTaskIds = new HashMap<>();
 		allJiraProjects.forEach(project -> project.getJiraTasks().forEach(task -> {
 			task.setIsSubTask(false);
 			allJiraTaskandSubTaskIds.put(task.getId(), task);	
@@ -92,7 +93,7 @@ public class TempoConsumer {
 		System.out.println("All Id's are gathered");
 		
 		// parse worklogs for each JiraTask or JiraSubTask
-		for(Map.Entry<String, IJiraTask> entry : allJiraTaskandSubTaskIds.entrySet()) {
+		for(Map.Entry<String, JiraBaseTask> entry : allJiraTaskandSubTaskIds.entrySet()) {
 			logger.info("making request for task: " + entry.getKey());
 			
 			// prepare url and headers
@@ -113,7 +114,7 @@ public class TempoConsumer {
 		
 	}
 
-	private void parseTempoWorklogs(ResponseEntity<String> response, IJiraTask iJiraTask) {
+	private void parseTempoWorklogs(ResponseEntity<String> response, JiraBaseTask iJiraTask) {
 		logger.debug("TempoConsumer.parseTempoWorklogs() now working");
 		tempoParser.tempoWorklogParser(response, iJiraTask);
 		

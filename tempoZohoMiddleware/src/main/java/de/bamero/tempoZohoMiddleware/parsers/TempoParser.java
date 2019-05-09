@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.bamero.tempoZohoMiddleware.entities.IJiraTask;
+import de.bamero.tempoZohoMiddleware.entities.JiraBaseTask;
 import de.bamero.tempoZohoMiddleware.entities.JiraSubTask;
 import de.bamero.tempoZohoMiddleware.entities.JiraTask;
 import de.bamero.tempoZohoMiddleware.entities.JiraWorkLog;
@@ -26,7 +27,7 @@ public class TempoParser {
 	
 	private static final Logger logger = LoggerFactory.getLogger(TempoParser.class);
 	
-	public void tempoWorklogParser(ResponseEntity<String> response, IJiraTask iJiraTask) {
+	public void tempoWorklogParser(ResponseEntity<String> response, JiraBaseTask iJiraTask) {
 		logger.debug("TempoParser.tempoWorklogParser is now working");
 		
 		try {
@@ -46,9 +47,8 @@ public class TempoParser {
 		
 	}
 	
-	private void parseTempoWorklog(JsonNode jsonNode, IJiraTask jiraTask) {
+	private void parseTempoWorklog(JsonNode jsonNode, JiraBaseTask jiraBaseTask) {
 		logger.debug("TempoParser.parseTempoWorklog()");
-		logger.debug("I'm parsing for jiraTask or Subtask id:" + jiraTask.getTaskId());
 		
 		JiraWorkLog tempoWorklog = new JiraWorkLog();
 		tempoWorklog.setWorkLogURI(jsonNode.get("self").asText());
@@ -74,6 +74,9 @@ public class TempoParser {
 		tempoWorklog.setAuthorAccountId(jsonNode.get("author").get("accountId").asText());
 		tempoWorklog.setAuthorDipslayName(jsonNode.get("author").get("displayName").asText());
 		
+		tempoWorklog.addJiraTask(jiraBaseTask);
+		
+		/*
 		// decide IJiraTask is JiraTask or JiraSubTask
 		if(jiraTask.getIsSubTask() == true) {
 			JiraTask myJiraTask = (JiraTask) jiraTask;
@@ -86,6 +89,7 @@ public class TempoParser {
 			logger.debug("I'm jira subtask my id: " + myJiraSubTask.getId());
 			tempoWorklog.addJiraTask(myJiraSubTask);
 		}
+		*/
 		
 		
 		

@@ -17,7 +17,7 @@ import lombok.Data;
 
 @Data
 @Entity
-public class JiraSubTask implements IJiraTask {
+public class JiraSubTask extends JiraBaseTask {
 	/*
 	@Id
 	@GeneratedValue(strategy=GenerationType.AUTO)
@@ -41,10 +41,6 @@ public class JiraSubTask implements IJiraTask {
 	@JoinColumn()
 	private JiraTask jiraTask;
 	
-	@OneToMany(mappedBy="jiraTaskOrSubTask", cascade=CascadeType.PERSIST, fetch = FetchType.EAGER)
-	private List<JiraWorkLog> worklogs;
-	
-	
 	public void addAssignee(JiraUser jiraUser) {
 		this.assignee = jiraUser;
 		jiraUser.getJiraSubTasks().add(this);
@@ -55,12 +51,6 @@ public class JiraSubTask implements IJiraTask {
 		jiraTask.getSubTasks().add(this);
 	}
 
-	@Override
-	public List<JiraWorkLog> getWorklogList() {
-		return this.worklogs;
-	}
-
-	@Override
 	public String getTaskId() {
 		return this.id;
 	}

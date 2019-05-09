@@ -19,7 +19,7 @@ import lombok.Data;
 
 @Data
 @Entity
-public class JiraTask implements IJiraTask {
+public class JiraTask extends JiraBaseTask {
 	/*
 	@Id
 	@GeneratedValue(strategy=GenerationType.AUTO)
@@ -52,16 +52,7 @@ public class JiraTask implements IJiraTask {
 		jiraUser.getJiraTasks().add(this);
 	}
 	
-	
-	@OneToMany(mappedBy="jiraTaskOrSubTask", cascade=CascadeType.PERSIST, fetch = FetchType.EAGER)
-	private List<JiraWorkLog> workLogs;
 
-	@Override
-	public List<JiraWorkLog> getWorklogList() {
-		return this.workLogs;
-	}
-
-	@Override
 	public String getTaskId() {
 		return this.id;
 	}

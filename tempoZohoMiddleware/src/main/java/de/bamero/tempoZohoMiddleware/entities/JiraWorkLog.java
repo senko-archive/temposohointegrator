@@ -46,10 +46,10 @@ public class JiraWorkLog {
 	
 	@ManyToOne
 	@JoinColumn
-	private IJiraTask jiraTaskOrSubTask;
+	private JiraBaseTask jiraTaskOrSubTask;
 	
-	public void addJiraTask(IJiraTask jiraTask) {
-		jiraTask.getWorklogList().add(this);
-		this.jiraTaskOrSubTask = jiraTask;
+	public void addJiraTask(JiraBaseTask jiraBaseTask) {
+		jiraBaseTask.getWorkLogs().add(this);
+		this.jiraTaskOrSubTask = jiraBaseTask;
 	}
 }

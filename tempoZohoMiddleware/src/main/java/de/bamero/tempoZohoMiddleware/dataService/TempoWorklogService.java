@@ -2,9 +2,12 @@ package de.bamero.tempoZohoMiddleware.dataService;
 
 import java.util.List;
 
+import javax.transaction.Transactional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import de.bamero.tempoZohoMiddleware.dataRepository.TempoWorklogJPARepository;
 import de.bamero.tempoZohoMiddleware.dataRepository.TempoWorklogRepository;
 import de.bamero.tempoZohoMiddleware.entities.JiraWorkLog;
 import de.bamero.tempoZohoMiddleware.exceptions.NotImplementedException;
@@ -16,6 +19,9 @@ public class TempoWorklogService implements ITempoWorklogService {
 	
 	@Autowired
 	TempoWorklogRepository tempoWorklogRepository;
+	
+	@Autowired
+	TempoWorklogJPARepository tempoWorklogJPARepository;
 
 	@Override
 	public List<JiraWorkLog> getAllTempoWorklogs() {
@@ -43,6 +49,13 @@ public class TempoWorklogService implements ITempoWorklogService {
 	@Override
 	public void deleteTempoWorklog(int _tempoWorklogId) {
 		throw new NotImplementedException("Not yet implemented");
+		
+	}
+
+	@Override
+	@Transactional
+	public void truncateWorklogs() {
+		tempoWorklogJPARepository.truncateTempoWorklogTable();
 		
 	}
 

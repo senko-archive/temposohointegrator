@@ -10,13 +10,15 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 
-import lombok.Data;
+import de.bamero.tempoZohoMiddleware.utils.LambdaEquals;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
 @Entity
+@Getter
+@Setter
 public class JiraUser {
 
 	@Id
@@ -30,16 +32,25 @@ public class JiraUser {
 	private String emailAddress;
 	private String displayName;
 	
-	@OneToMany(mappedBy="assignee", cascade=CascadeType.ALL, fetch = FetchType.EAGER)
+	@OneToMany(mappedBy="assignee", cascade=CascadeType.ALL, fetch = FetchType.LAZY)
 	@ElementCollection(targetClass=JiraTask.class)
 	private List<JiraTask> jiraTasks = new ArrayList<>();
 	
-	@OneToMany(mappedBy="assignee", cascade=CascadeType.ALL, fetch = FetchType.EAGER)
+	@OneToMany(mappedBy="assignee", cascade=CascadeType.ALL, fetch = FetchType.LAZY)
 	@ElementCollection(targetClass=JiraSubTask.class)
 	private List<JiraSubTask> jiraSubTasks = new ArrayList<>();
 	
 	public JiraUser() {
 		
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		return LambdaEquals.equals(this, obj, JiraUser::getUserJiraUri,
+											  JiraUser::getKey,
+											  JiraUser::getName,
+											  JiraUser::getEmailAddress,
+											  JiraUser::getDisplayName);
 	}
 
 }

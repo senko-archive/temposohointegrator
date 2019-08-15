@@ -16,9 +16,13 @@ import javax.persistence.OneToMany;
 import org.hibernate.annotations.Fetch;
 
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
-@Data
 @Entity
+@Getter
+@Setter
 @Inheritance(strategy=InheritanceType.JOINED)
 @DiscriminatorColumn(name="JiraTaskType")
 public class JiraBaseTask {

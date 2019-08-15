@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.Iterator;
@@ -75,8 +76,21 @@ public class TempoParser {
 		String createdAt = jsonNode.get("createdAt").asText().replaceAll("[TZ]", " ").trim();
 		String updateAt = jsonNode.get("updatedAt").asText().replaceAll("[TZ]", " ").trim();
 		DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-		tempoWorklog.setCreatedDate(LocalDateTime.parse(createdAt, dateTimeFormatter));
-		tempoWorklog.setUpdatedDate(LocalDateTime.parse(updateAt, dateTimeFormatter));
+		LocalDateTime createdAtLocalDateTime = LocalDateTime.parse(createdAt, dateTimeFormatter);
+		ZoneId oldZone = ZoneId.of("GMT+0");
+		ZoneId newZone = ZoneId.of("Europe/Berlin");
+		
+		LocalDateTime createdLocalDateTimeForBerlin = createdAtLocalDateTime.atZone(oldZone)
+															.withZoneSameInstant(newZone)
+															.toLocalDateTime();
+		
+		LocalDateTime updatedAtLocalDateTime = LocalDateTime.parse(updateAt, dateTimeFormatter);
+		LocalDateTime updatedAtLocalDateTimeForBerlin = updatedAtLocalDateTime.atZone(oldZone)
+				.withZoneSameInstant(newZone)
+				.toLocalDateTime();
+		
+		tempoWorklog.setCreatedDate(createdLocalDateTimeForBerlin);
+		tempoWorklog.setUpdatedDate(updatedAtLocalDateTimeForBerlin);
 		tempoWorklog.setAuthorURI(jsonNode.get("author").get("self").asText());
 		tempoWorklog.setAuthorAccountId(jsonNode.get("author").get("accountId").asText());
 		tempoWorklog.setAuthorDipslayName(jsonNode.get("author").get("displayName").asText());

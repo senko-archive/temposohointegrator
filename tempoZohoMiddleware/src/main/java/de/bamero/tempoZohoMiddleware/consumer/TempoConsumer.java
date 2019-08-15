@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import de.bamero.tempoZohoMiddleware.dataService.JiraProjectService;
+import de.bamero.tempoZohoMiddleware.dataService.TempoWorklogService;
 import de.bamero.tempoZohoMiddleware.entities.JiraBaseTask;
 import de.bamero.tempoZohoMiddleware.entities.JiraProject;
 import de.bamero.tempoZohoMiddleware.parsers.TempoParser;
@@ -35,6 +36,9 @@ public class TempoConsumer {
 	JiraProjectService jiraProjectService;
 	
 	@Autowired
+	TempoWorklogService tempoWorklogService;
+	
+	@Autowired
 	TempoParser tempoParser;
 
 	PropertiesLoader loader;
@@ -48,6 +52,8 @@ public class TempoConsumer {
 		
 		logger.debug("TempoConsumer.consumeTempoWorklogForEachJiraTask() now working");
 		
+		tempoWorklogService.truncateWorklogs();
+		
 		// take access_token from properties
 		Properties tempoProperties = loader.load("tempoRest.properties");
 		String accessToken = tempoProperties.getProperty("access_token");
@@ -55,29 +61,30 @@ public class TempoConsumer {
 		// init Lists for jira tasks and projects
 		List<String> jiraTaskAndSubTaskIdList = new ArrayList<>();
 		List<JiraProject> allJiraProjects = new ArrayList<>();
+		
 		List<String> dumpList = new ArrayList<>();
+		List<String> dumpJiraTaskAndSubTaskIdList = new ArrayList<>();
 		
 		// first get all projects
 		allJiraProjects = jiraProjectService.getAllJiraProjects();
+			
+		// get projects for dumpList, for now for ZohoTest1
+		Map<String, JiraBaseTask> allJiraTaskandSubTaskIds = new HashMap<>();
 		
-		// get all jiraTask Id's
+		allJiraProjects.stream().filter(e -> e.getProjectId().equalsIgnoreCase("10184")).findFirst().get().getJiraTasks()
+		.forEach(task -> {
+			task.setIsSubTask(false);
+			allJiraTaskandSubTaskIds.put(task.getId(), task);
+		});
+		
+		allJiraProjects.stream().filter(e -> e.getProjectId().equalsIgnoreCase("10184")).findFirst().get().getJiraTasks().forEach(task ->
+				task.getSubTasks().forEach(subTask -> {
+					subTask.setIsSubTask(true);
+					allJiraTaskandSubTaskIds.put(subTask.getId(), subTask);
+		}));
+	
+		
 		/*
-		jiraTaskAndSubTaskIdList = allJiraProjects.stream().flatMap(
-				project -> project.getJiraTasks().stream().map(
-						tasks -> tasks.getId())).collect(Collectors.toList());
-		*/
-		
-		// get all jiraSubTask Id's
-		/*
-		jiraTaskAndSubTaskIdList.addAll( 
-				allJiraProjects.stream().flatMap(
-				project -> project.getJiraTasks().stream().flatMap(
-						tasks -> tasks.getSubTasks().stream().map(
-								subtasks -> subtasks.getId()))).collect(Collectors.toList())
-				);
-		*/
-		
-		
 		// get all jira task and jira subtask id's with type Map<JiraTask/JiraSubTask Id, type(task or subtask)
 		Map<String, JiraBaseTask> allJiraTaskandSubTaskIds = new HashMap<>();
 		allJiraProjects.forEach(project -> project.getJiraTasks().forEach(task -> {
@@ -88,7 +95,7 @@ public class TempoConsumer {
 			task.setIsSubTask(true);
 			allJiraTaskandSubTaskIds.put(subTask.getId(), subTask);	
 		})));
-		
+		*/
 		System.out.println("All Id's are gathered");
 		
 		// parse worklogs for each JiraTask or JiraSubTask

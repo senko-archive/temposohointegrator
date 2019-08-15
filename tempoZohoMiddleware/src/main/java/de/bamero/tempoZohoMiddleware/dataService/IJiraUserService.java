@@ -9,8 +9,10 @@ public interface IJiraUserService {
 	List<JiraUser> getAllJiraUsers();
 	JiraUser getJiraUserById(String accountId);
 	boolean addJiraUser(JiraUser article);
-	void updateJiraUser(JiraUser jiraUser);
+	boolean updateJiraUser(JiraUser jiraUser);
 	void deleteJiraUser(int jiraUserId);
+	boolean checkJiraUserById(String accountId);
+	void update(JiraUser jiraUser);
 	
 
 }

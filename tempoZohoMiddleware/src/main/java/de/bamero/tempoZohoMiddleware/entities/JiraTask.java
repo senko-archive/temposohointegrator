@@ -1,5 +1,6 @@
 package de.bamero.tempoZohoMiddleware.entities;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,9 +20,13 @@ import org.hibernate.FetchMode;
 import org.hibernate.annotations.Fetch;
 
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
-@Data
 @Entity
+@Getter
+@Setter
 public class JiraTask extends JiraBaseTask {
 	/*
 	@Id
@@ -29,11 +34,17 @@ public class JiraTask extends JiraBaseTask {
 	private Long _jiraTaskId;
 	*/
 
+
+
+
 	private String id;
 	private String self;
 	private String key;
 	private String issueType;
 	private String description;
+	private String summary;
+	private LocalDateTime created;
+	private LocalDateTime updated;
 	
 	@Transient
 	private Boolean isSubTask;
@@ -60,6 +71,8 @@ public class JiraTask extends JiraBaseTask {
 	public String getTaskId() {
 		return this.id;
 	}
+	
+
 	
 	
 }

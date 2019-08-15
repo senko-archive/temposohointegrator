@@ -1,5 +1,6 @@
 package de.bamero.tempoZohoMiddleware.entities;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import javax.persistence.CascadeType;
@@ -14,9 +15,13 @@ import javax.persistence.OneToMany;
 import javax.persistence.Transient;
 
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
-@Data
 @Entity
+@Getter
+@Setter
 public class JiraSubTask extends JiraBaseTask {
 	/*
 	@Id
@@ -29,6 +34,9 @@ public class JiraSubTask extends JiraBaseTask {
 	private String self;
 	private String issueType; // allways will be "Sub-task"
 	private String description;
+	private String summary;
+	private LocalDateTime created;
+	private LocalDateTime updated;
 	
 	@Transient
 	private Boolean isSubTask;
@@ -51,7 +59,5 @@ public class JiraSubTask extends JiraBaseTask {
 		jiraTask.getSubTasks().add(this);
 	}
 
-	public String getTaskId() {
-		return this.id;
-	}
+	
 }

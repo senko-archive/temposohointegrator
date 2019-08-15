@@ -11,7 +11,7 @@ import org.springframework.web.client.RestTemplate;
 
 import de.bamero.tempoZohoMiddleware.consumer.JiraConsumer;
 import de.bamero.tempoZohoMiddleware.consumer.TempoConsumer;
-import de.bamero.tempoZohoMiddleware.tokenCheckers.TempoTokenChecker;
+import de.bamero.tempoZohoMiddleware.consumer.ZohoBooksConsumer;
 import de.bamero.tempoZohoMiddleware.utils.TokenCheckHelper;
 
 @Component
@@ -28,6 +28,9 @@ public class Runner {
 	
 	@Autowired
 	TempoConsumer tempoConsumer;
+	
+	@Autowired
+	ZohoBooksConsumer zohoBooksConsumer;
 		
 	@Bean
 	public RestTemplate restTemplate(RestTemplateBuilder builder) {
@@ -38,29 +41,34 @@ public class Runner {
 	public void run() {
 		logger.debug("Runner.run() now working");
 		
+		
 		// check if tempo and/or zohobooks access_token's should renew or not.
 		tokenCheckHelper.checkForTempoRestAPI();
 		tokenCheckHelper.checkForZohoBooksRestAPI();
-		
+
 		// parse and save db to JiraUsers
 		jiraConsumer.consumeJiraUsers();
-		
+
 		// get all external projects from jira
 		jiraConsumer.consumeJiraProjects();
-		
+
+				
 		// for all projects get tasks.
 		jiraConsumer.consumeJiraTasks();
 		
 		// for all jira tasks get worklogs
 		tempoConsumer.consumeTempoWorklogForEachJiraTask();
+	
 		
+		// get all zohobooks users
+		zohoBooksConsumer.consumeZohoBooksUsers();
+	
+		// start taking data from zohobooks
+		zohoBooksConsumer.consumeZohoBooksProjects();
 		
-		 
-		
-		
-		
-		
-		
+		// start taking zohoBooksTasks per project
+		zohoBooksConsumer.consumeZohoBooksTasks();
+
 		
 		
 	}

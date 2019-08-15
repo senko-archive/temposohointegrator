@@ -1,6 +1,9 @@
 package de.bamero.tempoZohoMiddleware.parsers;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -19,8 +22,6 @@ import de.bamero.tempoZohoMiddleware.dataService.IJiraProjectService;
 import de.bamero.tempoZohoMiddleware.dataService.IJiraSubTaskService;
 import de.bamero.tempoZohoMiddleware.dataService.IJiraTaskService;
 import de.bamero.tempoZohoMiddleware.dataService.IJiraUserService;
-import de.bamero.tempoZohoMiddleware.dataService.JiraSubTaskService;
-import de.bamero.tempoZohoMiddleware.dataService.JiraUserService;
 import de.bamero.tempoZohoMiddleware.entities.JiraProject;
 import de.bamero.tempoZohoMiddleware.entities.JiraSubTask;
 import de.bamero.tempoZohoMiddleware.entities.JiraTask;
@@ -76,13 +77,31 @@ public class JiraParser {
 		jiraUser.setKey(jsonNode.get("key").asText());
 		jiraUser.setAccountId(jsonNode.get("accountId").asText());
 		jiraUser.setName(jsonNode.get("name").asText());
-		jiraUser.setEmailAddress(jsonNode.get("emailAddress").asText());
+		
+		if(jsonNode.has("emailAddress")) {
+			jiraUser.setEmailAddress(jsonNode.get("emailAddress").asText());
+		}
+		else
+			jiraUser.setEmailAddress("no email address found on jira");
+		
+		
 		jiraUser.setDisplayName(jsonNode.get("displayName").asText());
 		
 		logger.debug("jirauser is: " + jiraUser);
 		
-		// save to the database
-		boolean result = jiraUserService.addJiraUser(jiraUser);
+		// control if jiraUser is already in database and have same record
+		// first control if record is in database and if it is, then check the record is the same
+		boolean isAvailable = jiraUserService.checkJiraUserById(jiraUser.getAccountId());
+		if(isAvailable == true) {
+			// check if update is needed and if needed update 
+			jiraUserService.update(jiraUser);
+			}
+		else {
+			// no record in database add new one
+			// save to the database
+			boolean result = jiraUserService.addJiraUser(jiraUser);
+		}
+		
 	}
 
 	public void jiraProjectParser(ResponseEntity<String> response) {
@@ -112,21 +131,31 @@ public class JiraParser {
 			// add only external projects
 			if (jsonNode.get("projectCategory").get("name").asText().equalsIgnoreCase("external")) {
 				JiraProject project = new JiraProject();
-				project.setProjectJiraUri(jsonNode.get("self").toString());
-				project.setProjectId(jsonNode.get("id").toString());
-				project.setProjectKey(jsonNode.get("key").toString());
-				project.setProjectName(jsonNode.get("name").toString());
+				project.setProjectJiraUri(jsonNode.get("self").asText());
+				project.setProjectId(jsonNode.get("id").asText());
+				project.setProjectKey(jsonNode.get("key").asText());
+				project.setProjectName(jsonNode.get("name").asText());
 				// some project jsonNode's don't have projectCategory field
 				project.setProjectCategory((jsonNode.get("projectCategory") == null) ? "no category"
 						: jsonNode.get("projectCategory").get("name").asText());
 				
-				boolean result = jiraProjectService.addJiraProject(project);
+				// control if jiraProject is already in database and have same record
+				// first control if record is in database and if it is, then check the record is the same or not
+				boolean isAvailable = jiraProjectService.checkJiraProjectById(project.getProjectId());
+				if(isAvailable == true) {
+					// check if update is needed and if needed update
+					jiraProjectService.update(project);
+				}
+				else {
+					boolean result = jiraProjectService.addJiraProject(project);
+				}
+				
 			}
 		}
 	}
 	
 	public void jiraTaskParser(ResponseEntity<String> response, JiraProject jiraProject) {
-		logger.debug("JiraParser.jiraTaskParser() now working");
+		logger.debug("JiraParser.jiraTaskParser() now working for project: " + jiraProject.getProjectId() + "-" + jiraProject.getProjectName());
 		
 		// List for temp jira sub-tasks
 		List<JsonNode> tempJiraSubTask = new ArrayList<>();
@@ -137,8 +166,8 @@ public class JiraParser {
 			root = mapper.readTree(response.getBody());
 			
 			if(root.get("issues").isMissingNode()) {
-				logger.debug("Missing node match, there may be error in query");
-				logger.debug("response query: " + root.toString());
+				logger.error("Missing node match, there may be error in query");
+				logger.error("response query: " + root.toString());
 			}
 			else {
 				JsonNode issues = root.get("issues");
@@ -178,12 +207,28 @@ public class JiraParser {
 			jiraSubTask.setSelf(jsonNode.get("self").asText());
 			// Issue Type will be always "Sub-task"
 			jiraSubTask.setIssueType("Sub-task");
+			jiraSubTask.setSummary(jsonNode.get("fields").get("summary").asText());
+			
+			DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
+			StringBuilder created = new StringBuilder(jsonNode.get("fields").get("created").asText());
+			created.insert(26, ":");
+			
+			StringBuilder updated = new StringBuilder(jsonNode.get("fields").get("created").asText());
+			updated.insert(26, ":");
+			
+			jiraSubTask.setCreated(LocalDateTime.parse(created.toString(), formatter));
+			jiraSubTask.setUpdated(LocalDateTime.parse(updated.toString(), formatter));
 			
 			// assign users
 			// find user from database and add
 			if (!jsonNode.get("fields").get("assignee").isNull()) {
 				String accountId = jsonNode.get("fields").get("assignee").get("accountId").asText();
 				JiraUser assignee = matcher.findJiraUser(accountId);
+				if(assignee == null) {
+					logger.error("User couldn't found for account id:" + accountId + " in subtask: " + jiraSubTask.getId());
+					logger.error("TEMPORARY SOLUTION: Florian.Kurz is added for non-found/deleted user");
+					assignee = matcher.findJiraUser("5a168d25233b6b0a02707845");
+				}
 				jiraSubTask.addAssignee(assignee);
 			}
 			
@@ -194,7 +239,7 @@ public class JiraParser {
 	}
 
 	private void parseTaskRequest(JsonNode jsonNode, List<JsonNode> tempJiraSubTask, JiraProject jiraProject) {
-		logger.debug("JiraParser.parseTaskRequest() now working");
+		logger.debug("JiraParser.parseTaskRequest() now working for project: " + jiraProject.getProjectId() + "-" + jiraProject.getProjectName());
 		
 		// if task is not subtask then create jiraTask
 		if(!jsonNode.get("fields").get("issuetype").get("subtask").asBoolean()) {
@@ -206,34 +251,75 @@ public class JiraParser {
 			jiraTask.setIssueType(jsonNode.get("fields").get("issuetype").get("name").asText());
 			// for now I'm putting some dump description
 			jiraTask.setDescription("lorem ipsum sit amet");
+			jiraTask.setSummary(jsonNode.get("fields").get("summary").asText());
+			DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
+			
+			// for updated and created field add ":" character to timezone
+			// it comes from jira like "2019-04-17T10:18:13.611+0200"
+			// but should be like "2019-04-17T10:18:13.611+020:0"
+			
+			StringBuilder created = new StringBuilder(jsonNode.get("fields").get("created").asText());
+			created.insert(26, ":");
+			
+			StringBuilder updated = new StringBuilder(jsonNode.get("fields").get("created").asText());
+			updated.insert(26, ":");
+			
+			ZoneId oldZone = ZoneId.of("GMT+0");
+			ZoneId newZone = ZoneId.of("Europe/Berlin");
+			
+			LocalDateTime createdAt = LocalDateTime.parse(created.toString(), formatter);
+			LocalDateTime createdAtForBerlin = createdAt.atZone(oldZone).withZoneSameInstant(newZone).toLocalDateTime();
+			
+			LocalDateTime updatedAt = LocalDateTime.parse(updated.toString(), formatter);
+			LocalDateTime updatedAtForBerlin = updatedAt.atZone(oldZone).withZoneSameInstant(newZone).toLocalDateTime();
+			
+			jiraTask.setCreated(createdAtForBerlin);
+			jiraTask.setUpdated(updatedAtForBerlin);
 			
 			// assign users
 			// find user from database and add
 			if (!jsonNode.get("fields").get("assignee").isNull()) {
 				String accountId = jsonNode.get("fields").get("assignee").get("accountId").asText();
 				JiraUser assignee = matcher.findJiraUser(accountId);
+				if(assignee == null) {
+					logger.error("User couldn't found for account id:" + accountId + " in subtask: " + jiraTask.getId());
+					logger.error("TEMPORARY SOLUTION: Florian.Kurz is added for non-found/deleted user");
+					assignee = matcher.findJiraUser("5a168d25233b6b0a02707845");
+				}
 				jiraTask.addAssignee(assignee);
 			}
 			
 			// assign project
+			logger.debug("Adding jiraTask: " + jiraTask.getId() + " to jiraProject: " + jiraProject.getProjectName());
 			jiraTask.setJiraProject(jiraProject);
 			
 			// assign jiraTask in JiraProject
 			jiraProject.getJiraTasks().add(jiraTask);
 			
 			// save jiraTask to the db
+			logger.debug("Saving jiraTask to database");
 			boolean result = jiraTaskService.addJiraTask(jiraTask);
 			
 			// find subtask for jira task
 			Iterator<JsonNode> subTaskIterator = jsonNode.get("fields").get("subtasks").elements();
+			logger.debug("finding subtask for jira task: " + jiraTask.getId());
 			while(subTaskIterator.hasNext()) {
 				JsonNode jiraSubIssueNode = subTaskIterator.next();
 				String subTaskIdinParentTask = jiraSubIssueNode.get("id").asText();
+				logger.debug("Jira subtaskId: " + subTaskIdinParentTask + " is searching");
 				JiraSubTask jiraSubTask = JiraSubTaskService.getJiraSubTaskByJiraId(subTaskIdinParentTask);
-				jiraSubTask.addJiraTask(jiraTask);
+				if(jiraSubTask != null) {
+					
+					logger.debug("jiraSubTask: " + jiraSubTask.getId() + " found and adding to jiraTask: " + jiraTask.getId());
+					jiraSubTask.addJiraTask(jiraTask);
+					
+					// update jiraSubTask
+					JiraSubTaskService.updateJiraSubTask(jiraSubTask);
+				}
+				else {
+					logger.error("NO SUBTASK FOUND with ID: " + subTaskIdinParentTask + "possible error is no recorded subtask in jira, or subtask is deleted.");
+				}
 				
-				// update jiraSubTask
-				JiraSubTaskService.updateJiraSubTask(jiraSubTask);
 			}
 				
 		}

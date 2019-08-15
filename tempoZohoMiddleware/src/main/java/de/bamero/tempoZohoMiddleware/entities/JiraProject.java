@@ -8,13 +8,15 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 
-import lombok.Data;
+import de.bamero.tempoZohoMiddleware.utils.LambdaEquals;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
 @Entity
+@Getter
+@Setter
 public class JiraProject {
 	
 	@Id
@@ -30,5 +32,16 @@ public class JiraProject {
 	
 	@OneToMany(mappedBy="jiraProject", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
 	private List<JiraTask> jiraTasks;
+	
+	@Override
+	public boolean equals(Object obj) {
+		return LambdaEquals.equals(this, obj, JiraProject::getProjectJiraUri,
+											  JiraProject::getProjectName,
+											  JiraProject::getProjectKey,
+											  JiraProject::getProjectCategory);
+	}
+
+	
+	
 	
 }

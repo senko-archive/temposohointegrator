@@ -13,18 +13,21 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
-@Data
 @Entity
+@Getter
+@Setter
 public class JiraWorkLog {
 	
 	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
-	private Long _jiraWorkLogId;
+	private String jiraWorkLogId;
 		
 	private String workLogURI;
 	private String tempoWorkLogId;
-	private String jiraWorkLogId;
+	
 	
 	private String issueURI;
 	private String issueKey;

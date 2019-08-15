@@ -8,6 +8,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
+
 @SpringBootApplication
 public class TempoZohoMiddlewareApplication implements CommandLineRunner {
 	
@@ -18,13 +19,17 @@ public class TempoZohoMiddlewareApplication implements CommandLineRunner {
 
 	public static void main(String[] args) {
 		
-		SpringApplication app = new SpringApplication(TempoZohoMiddlewareApplication.class);
-		ConfigurableApplicationContext ctx = app.run(args);
+		
+		System.setProperty("spring.devtools.restart.enabled", "false");
+		SpringApplication.run(TempoZohoMiddlewareApplication.class, args);
+		//SpringApplication app = new SpringApplication(TempoZohoMiddlewareApplication.class);
+		//ConfigurableApplicationContext ctx = app.run(args);
 		// when need to close program
 		//ctx.close();
 		
 	}
 	
+	@Override
 	public void run(String... args) throws Exception {
 		logger.info("System started...");
 		runner.run();

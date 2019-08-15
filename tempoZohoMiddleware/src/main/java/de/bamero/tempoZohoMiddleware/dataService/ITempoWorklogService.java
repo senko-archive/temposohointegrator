@@ -13,5 +13,6 @@ public interface ITempoWorklogService {
 	boolean addTempoWorklog(JiraWorkLog tempoWorklog);
 	void updateTempoWorklog(JiraWorkLog tempoWorklog);
 	void deleteTempoWorklog(int _tempoWorklogId);
+	void truncateWorklogs();
 
 }
